@@ -4,3 +4,6 @@ Unity_Shaders_Book/UserSettings
 Unity_Shaders_Book/Library
 Unity_Shaders_Book/Logs
 Unity_Shaders_Book/Packages
+*.csproj
+*.sln
+*.meta
