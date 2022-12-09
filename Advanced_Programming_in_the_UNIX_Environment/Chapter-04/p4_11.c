@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     printf("sockets        = %71d, %5.2f %%\n", nsock, nsock * 100.0 / ntot);
     end = clock();
     duration = (double)(end - start) / CLOCKS_PER_SEC;
-    printf("4_11 costs : %f second\n", duration);
+    printf("p4_11 costs : %f second\n", duration);
     exit(ret);
 }
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 #define FTW_DNR 3
 #define FTW_NS 4
 
-static char *fullpath;
+static char *filename;
 static size_t pathlen;
 
 char *path_alloc(size_t *size)
@@ -64,15 +64,15 @@ char *path_alloc(size_t *size)
 
 static int myftw(char *pathname, Myfunc *func)
 {
-    fullpath = path_alloc(&pathlen);
+    filename = path_alloc(&pathlen);
 
     if (pathlen <= strlen(pathname)) {
         pathlen = strlen(pathname) * 2;
-        if ((fullpath = realloc(fullpath, pathlen)) == NULL) {
+        if ((filename = realloc(filename, pathlen)) == NULL) {
             err_sys("realloc error");
         }
     }
-    strcpy(fullpath, pathname);
+    strcpy(filename, pathname);
     dopath(func);
 }
 
@@ -82,42 +82,44 @@ static int dopath(Myfunc *func)
     struct dirent *dirp;
     DIR *dp;
     int ret, n;
-    if (lstat(fullpath, &statbuf) < 0) {
-        return (func(fullpath, &statbuf, FTW_NS));
+    if (lstat(filename, &statbuf) < 0) {
+        return (func(filename, &statbuf, FTW_NS));
     }
     if (S_ISDIR(statbuf.st_mode) == 0) {
-        return (func(fullpath, &statbuf, FTW_F));
+        return (func(filename, &statbuf, FTW_F));
     }
 
-    if ((ret = func(fullpath, &statbuf, FTW_D)) != 0) {
+    if ((ret = func(filename, &statbuf, FTW_D)) != 0) {
         return (ret);
     }
     
-    n = strlen(fullpath);
+    n = strlen(filename);
     if (n + NAME_MAX + 2 > pathlen) {
         pathlen *= 2;
-        if ((fullpath = realloc(fullpath, pathlen)) == NULL) {
+        if ((filename = realloc(filename, pathlen)) == NULL) {
             err_sys("realloc error");
         }
     }
-    fullpath[n++] = '/';
-    fullpath[n] = 0;
-    if ((dp = opendir(fullpath)) == NULL) {
-        return (func(fullpath, &statbuf, FTW_DNR));
+    if ((dp = opendir(filename)) == NULL) {
+        return (func(filename, &statbuf, FTW_DNR));
+    }
+    if (chdir(filename) < 0) {
+        err_sys("chdir error");
     }
     while ((dirp = readdir(dp)) != NULL)
     {
         if (strcmp(dirp->d_name, ".") == 0 | strcmp(dirp->d_name, "..") == 0) {
             continue;
         }
-        strcpy(&fullpath[n], dirp->d_name);
+        filename = dirp->d_name;
         if ((ret = dopath(func)) != 0)
             break;
     }
-
-    fullpath[n-1] = 0;
+    if (chdir("..") < 0) {
+        err_sys("chdir .. error");
+    }
     if (closedir(dp) < 0) {
-        err_ret("can't close directory %s", fullpath);
+        err_ret("can't close directory %s", filename);
     }
     return (ret);
 }
