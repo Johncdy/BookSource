@@ -1,0 +1,5 @@
+enter any character
+steam = stdin, full buffered, buffer size = 4096
+steam = stdout, full buffered, buffer size = 4096
+steam = stderror, unbuffered, buffer size = 1
+steam = /etc/passwd, full buffered, buffer size = 4096
