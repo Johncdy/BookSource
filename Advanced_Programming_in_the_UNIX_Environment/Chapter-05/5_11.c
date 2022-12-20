@@ -29,7 +29,7 @@ int main(void)
 
 void pr_studio(const char *name, FILE *fp)
 {
-    printf("steam = %s, ", name);
+    printf("stream = %s, ", name);
     if (is_unbuffered(fp))
         printf("unbuffered");
     else if (is_linebuffered(fp))
