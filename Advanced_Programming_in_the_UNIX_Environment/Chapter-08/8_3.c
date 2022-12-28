@@ -14,10 +14,12 @@ int main(void)
     } else if (pid == 0) {
         globvar++;
         var++;
-        _exit(0);
+        fclose(stdout);
+        exit(0);
     }
 
-    printf("pid = %ld, glob = %d, var = %d\n", (long)getpid(), globvar, var);
+    int t = printf("pid = %ld, glob = %d, var = %d\n", (long)getpid(), globvar, var);
+    printf("%d\n", t);
 
     exit(0);
 }
