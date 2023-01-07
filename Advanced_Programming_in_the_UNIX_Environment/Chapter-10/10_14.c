@@ -19,6 +19,8 @@ void pr_mask(const char *str)
             printf(" SIGUSR1");
         if (sigismember(&sigset, SIGALRM))
             printf(" SIGALRM");
+
+        printf("\n");
     }
 
     errno = errno_save;
