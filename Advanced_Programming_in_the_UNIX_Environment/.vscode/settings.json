@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "fcntl.h": "c",
-        "signal.h": "c"
+        "signal.h": "c",
+        "corecrt_wstdio.h": "c"
     }
 }

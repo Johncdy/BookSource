@@ -61,7 +61,7 @@ volatile int count = 0;
 
 void writenum()
 {
-    FILE *file = fopen("foo", "w");
+    FILE *file = fopen("foo", "a");
     fprintf(file, "%d\n", count);
     count++;
     fclose(file);
