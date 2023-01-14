@@ -1,13 +1,13 @@
 #include "apue.h"
 #include <pthread.h>
 
-void thr_fn1(const char *s)
+void *thr_fn1(void *arg)
 {
     printf("thread 1 returning\n");
     return((void *)1);
 }
 
-void thr_fn2(const char *s)
+void *thr_fn2(void *s)
 {
     printf("thread 2 existing\n");
     pthread_exit((void *)2);
