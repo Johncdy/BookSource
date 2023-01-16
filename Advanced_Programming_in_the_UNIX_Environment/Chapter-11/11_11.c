@@ -79,7 +79,7 @@ void foo_rele(struct foo *fp)
         idx = HASH(fp->f_id);
         tfp = fh[idx];
         if (tfp == fp) {
-            tfp = fp->f_next;
+            fh[idx] = fp->f_next;
         } else {
             while (tfp->f_next != fp)
                 tfp = tfp->f_next;
