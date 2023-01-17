@@ -17,9 +17,15 @@ void printfoo(const char *s, const struct foo *fp)
 
 void *thr_fn1(void *arg)
 {
-    struct foo foo = {1, 2, 3, 4};
-    printfoo("thread 1:\n", &foo);
-    pthread_exit((void *)&foo);
+    struct foo *fp;
+    if ((fp = malloc(sizeof(struct foo))) == NULL)
+        err_sys("can't allocate memory");
+    fp->a = 1;
+    fp->b = 2;
+    fp->c = 3;
+    fp->d = 4;
+    printfoo("thread 1:\n", fp);
+    return ((void *)fp);
 }
 
 void *thr_fn2(void *arg)
