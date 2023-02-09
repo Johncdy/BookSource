@@ -49,7 +49,6 @@ void WAIT_CHILD(void)
 {
     while (sigflag == 0)
         sigsuspend(&zeromask);
-    
     sigflag = 0;
     
     if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0)
