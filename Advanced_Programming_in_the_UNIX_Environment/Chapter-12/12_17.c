@@ -58,7 +58,7 @@ int main(void)
     sleep(2);
     printf("parent about to fork...\n");
 
-    if ((pid == fork()) < 0)
+    if ((pid = fork()) < 0)
         err_quit("fork failed");
     else if (pid == 0)
         printf("child returned from fork\n");

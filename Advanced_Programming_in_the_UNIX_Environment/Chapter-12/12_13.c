@@ -48,5 +48,7 @@ char* getenv(const char *name)
 
 int main(void)
 {
+    char *str = getenv("GOROOT");
+    printf("%s\n", str);
     return (0);
 }

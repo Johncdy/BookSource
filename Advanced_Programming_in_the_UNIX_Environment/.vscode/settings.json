@@ -2,6 +2,8 @@
     "files.associations": {
         "fcntl.h": "c",
         "signal.h": "c",
-        "corecrt_wstdio.h": "c"
+        "corecrt_wstdio.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c"
     }
 }
