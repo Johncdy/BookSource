@@ -53,7 +53,18 @@ void daemonize(const char *cmd)
 
 int main(void)
 {
-    daemonize("ps");
-    sleep(10);
+    FILE *fp;
+    char *p;
+
+    daemonize("getlog");
+
+    p = getlogin();
+    fp = fopen("/tmp/getlog.out", "w");
+    if (fp != NULL) {
+        if (p == NULL)
+            fprintf(fp, "no login name\n");
+        else
+            fprintf(fp, "login name: %s\n", p);
+    }
     return 0;
 }
