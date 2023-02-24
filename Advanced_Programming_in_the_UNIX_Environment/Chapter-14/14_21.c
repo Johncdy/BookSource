@@ -89,21 +89,51 @@ int main(int argc, char *argv[])
                     else
                         err_exit(err, "read failed");
                 }
+
                 if ((n = aio_return(&bufs[i].aiocb)) < 0)
                     err_sys("aio_return failed");
                 if (n != BSZ && !bufs[i].last)
                     err_quit("short read (%d/%d)", n, BSZ);
                 for (j = 0; j < count; j++)
                     bufs[i].data[j] = translate(bufs[i].data[j]);
-                
+                bufs[i].op = WRITE_PENDING;
+                bufs[i].aiocb.aio_fildes = ofd;
+                bufs[i].aiocb.aio_nbytes = n;
+                if (aio_write(&bufs[i].aiocb) < 0)
+                    err_sys("aio_write failed");
                 break;
-            
+            case WRITE_PENDING:
+                if ((err = aio_error(&bufs[i].aiocb)) == EINPROGRESS)
+                    continue;
+                if (err != 0) {
+                    if (err == -1)
+                        err_sys("aio_error failed");
+                    else
+                        err_exit(err, "write failed");
+                }
+
+                if ((n = aio_return(&bufs[i].aiocb)) < 0)
+                    err_sys("aio_return failed");
+                if (n != bufs[i].aiocb.aio_nbytes)
+                    err_quit("short write (%d/%d)", n, BSZ);
+                aiolist[i] = NULL;
+                bufs[i].op = UNUSED;
+                numop--;
+                break;
             default:
                 break;
             }
         }
-        
+        if (numop == 0) {
+            if (off >= sbuf.st_size)
+                break;
+        } else {
+            if (aio_suspend(aiolist, NBUF, NULL) < 0)
+                err_sys("aio_suspend failed");
+        }
     }
-
+    bufs[0].aiocb.aio_fildes = ofd;
+    if (aio_fsync(O_SYNC, &bufs[0].aiocb) < 0)
+        err_sys("aio_fsync failed");
     exit(0);
 }
