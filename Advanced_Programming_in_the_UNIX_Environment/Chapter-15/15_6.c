@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
         else
             argv0 = pager;
         
-        if (execl(pager, argv0, (char *)))
+        if (execl(pager, argv0, (char *)0) < 0)
+            err_sys("execl error for %s", pager);
     }
 
     exit(0);
