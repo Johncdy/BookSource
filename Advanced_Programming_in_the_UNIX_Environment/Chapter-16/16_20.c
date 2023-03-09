@@ -1,13 +1,13 @@
 #include "apue.h"
-#include <sys/socket.h>
-#include <errno.h>
-#include <syslog.h>
 #include <netdb.h>
+#include <syslog.h>
+#include <errno.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <sys/resource.h>
 
 #define BUFLEN  128
-#define QLEN    10
+#define MAXADDRLEN  256
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX   256
@@ -94,26 +94,28 @@ errout:
 
 void serve(int sockfd)
 {
-    int clfd;
+    int n;
+    socklen_t alen;
     FILE *fp;
     char buf[BUFLEN];
+    char abuf[MAXADDRLEN];
+    struct sockaddr *addr = (struct sockaddr *)abuf;
 
     set_cloexec(sockfd);
     for (;;) {
-        if ((clfd = accept(sockfd, NULL, NULL)) < 0) {
-            syslog(LOG_ERR, "ruptimed: accept error: %s", strerror(errno));
+        alen = MAXADDRLEN;
+        if ((n = recvfrom(sockfd, buf, BUFLEN, 0, addr, &alen)) < 0) {
+            syslog(LOG_ERR, "ruptimed: recvfrom error: %s", strerror(errno));
             exit(1);
         }
-        set_cloexec(clfd);
         if ((fp = popen("/usr/bin/uptime", "r")) == NULL) {
             sprintf(buf, "error: %s\n", strerror(errno));
-            send(clfd, buf, strlen(buf), 0);
+            sendto(sockfd, buf, strlen(buf), 0, addr, alen);
         } else {
-            while (fgets(buf, BUFLEN, fp) != NULL)
-                send(clfd, buf, strlen(buf), 0);
+            if (fgets(buf, BUFLEN, fp) != NULL)
+                sendto(sockfd, buf, strlen(buf), 0, addr, alen);
             pclose(fp);
         }
-        close(clfd);
     }
 }
 
@@ -123,7 +125,7 @@ int main(int argc, char *argv[])
     struct addrinfo hint;
     int sockfd, err, n;
     char *host;
-
+    
     if (argc != 1)
         err_quit("usage: ruptimed");
     if ((n = sysconf(_SC_HOST_NAME_MAX)) < 0)
@@ -134,17 +136,18 @@ int main(int argc, char *argv[])
         err_sys("gethostname error");
     daemonize("ruptimed");
     memset(&hint, 0, sizeof(hint));
-    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_socktype = SOCK_DGRAM;
     hint.ai_canonname = NULL;
+    hint.ai_flags = AI_CANONNAME;
     hint.ai_addr = NULL;
     hint.ai_next = NULL;
-    hint.ai_flags = AI_CANONNAME;
     if ((err = getaddrinfo(argv[1], "ruptime", &hint, &ailist)) != 0) {
         syslog(LOG_ERR, "getaddrinfo error %s", gai_strerror(err));
         exit(1);
     }
     for (aip = ailist; aip != NULL; aip = aip->ai_next) {
-        if ((sockfd = initserver(SOCK_STREAM, aip->ai_addr, aip->ai_addrlen, QLEN)) >= 0) {
+        if ((sockfd = initserver(SOCK_DGRAM, aip->ai_addr, aip->ai_addrlen, 0)) >= 0)
+        {
             serve(sockfd);
             exit(0);
         }
