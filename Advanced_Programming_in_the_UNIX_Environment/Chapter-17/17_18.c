@@ -16,7 +16,15 @@ int main(int argc, char *argv[])
         if ((fd = csopen(line, O_RONLY)) < 0)
             continue;
 
+        while ((n = read(fd, buf, BUFFSIZE)) > 0)
+            if (write(STDOUT_FILENO, buf, n) != n)
+                err_sys("write error");        
         
+        if (n < 0)
+            err_sys("read error");
+        
+        close(fd);
     }
     
+    exit(0);
 }
